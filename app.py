@@ -35,8 +35,8 @@ AGENTS = {
             "what is the average treatment cost grouped by outcomes",
             "How have claims changed year over year?",
             "What percentage of claims are approved?",
-             "Which insurance provider has the most claims?",
-            "What is the total treatment cost by department?"
+            "Which insurance provider has the most claims?",
+            "What is the total treatment cost by department?",
         ],
     },
     "Finance": {
@@ -78,18 +78,34 @@ with st.sidebar:
     st.markdown("### ❄️ Cortex Multi Agent Studio")
     st.caption("Pick who you want to talk to, then ask a question.")
 
+    # 🎭 The Snowflake role the app connects as (the shared token is restricted to READER_ROLE).
     st.markdown("#### 🎭 Your role")
     role = st.selectbox("Run as role", ["READER_ROLE", "ACCOUNTADMIN"],
                         label_visibility="collapsed")
 
+    # 🤖 Which agent to talk to. THIS defines `agent_choice`, used all over the app —
+    # it must stay active (never comment it out).
     st.markdown("#### 🤖 Choose an agent")
     agent_choice = st.radio("Agent", list(AGENTS.keys()), label_visibility="collapsed")
 
-    with st.expander("⚙️ Connection settings"):
-        account = st.text_input("Account", value="HTTJFFR-BW29102")
-        user = st.text_input("User", value="ADMIN")
-        pat_token = st.text_input("Access token (PAT)", type="password",
-                                  help="Role-scoped token. Kept in memory only.")
+    # 🙋 Who is asking. This is ONLY for the audit table's `user_name` column.
+    # The database login stays ADMIN (via the one shared token); this picker just
+    # records the real person (Priyanka / Anand) so the audit shows who asked.
+    # Add more names to this list as more people use the app.
+    st.markdown("#### 🙋 Your name")
+    asked_by = st.selectbox("Your name", ["PRIYANKA", "ANAND_JHA"],
+                            label_visibility="collapsed",
+                            help="Who is asking — saved in the audit table.")
+
+    # ⚙️ Connection (account, login user, shared token) is read from a hidden config file:
+    #   .streamlit/secrets.toml   (set up ONCE, git-ignored, never shown in the app)
+    # The login user is ADMIN — the owner of the one shared token — but it's plumbing only
+    # and is NEVER shown here or recorded. What the audit records is "Your name" above.
+    account = st.secrets["snowflake"]["account"]
+    user = st.secrets["snowflake"]["user"]        # = ADMIN, hidden — just carries the shared token
+    pat_token = st.secrets["snowflake"]["token"]  # the one shared token, hidden
+
+    with st.expander("⚙️ Display options",expanded=True):
         show_numbers = st.checkbox("Show the data table under answers", value=True)
         show_thinking = st.checkbox("Show the agent's thinking steps", value=False,
                                     help="The agent's planning trace (Planning, "
@@ -100,7 +116,7 @@ with st.sidebar:
     if st.button("🗑️ Clear conversation"):
         st.session_state.messages = []
 
-agent = AGENTS[agent_choice]
+agent = AGENTS[agent_choice]                                       # needs agent_choice (above)
 BASE_URL = f"https://{account}.snowflakecomputing.com"
 
 
@@ -112,7 +128,7 @@ def ask_agent(question: str) -> dict:
     url = (f"{BASE_URL}/api/v2/databases/{agent['db']}"
            f"/schemas/{agent['schema']}/agents/{agent['name']}:run")
     headers = {
-        "Authorization": f"Bearer {pat_token}",
+        "Authorization": f"Bearer {pat_token}",                   # the shared token authenticates the agent call
         "Content-Type": "application/json",
         "Accept": "text/event-stream",
     }
@@ -370,14 +386,17 @@ if question:
             with st.expander("🔬 Raw stream (debug)", expanded=False):
                 st.code(debug)
 
-        # ---- silently save ONE audit row per question (no UI, fully automatic) ----
+        # ---- save ONE audit row per question ----
+        # Connection logs in as `user` (ADMIN, the shared-token owner), but we record
+        # `user_name=asked_by` (the person picked in the sidebar) into the user_name column,
+        # so the audit shows WHO asked even though everyone shares one token.
         if pat_token and raw_full:
             try:
                 summary = summarize_audit(raw_full)
                 save_audit_summary(summary, question, agent_choice, role,
-                                   account, user, pat_token, raw_response=raw_full)
+                                   account, user, pat_token, raw_response=raw_full,
+                                   user_name=asked_by)
                 st.success("✅ Audit row saved.")
-                
             except Exception as e:  # noqa: BLE001
                 st.error(f"⚠️ Audit save failed: {e}")
 

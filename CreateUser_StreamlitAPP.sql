@@ -32,7 +32,7 @@ CREATE USER IF NOT EXISTS Priyanka
     PASSWORD          = 'TempPassw0rd!Change'      -- temporary; they change it
     LOGIN_NAME        = 'Priyanka'
     DISPLAY_NAME      = 'Priyanka Pandey'
-    EMAIL             = 'pndy36@gmail.com'
+    EMAIL             = 'gdfgretrgfg@.com'
     MUST_CHANGE_PASSWORD = TRUE
     DEFAULT_ROLE      = READER_ROLE
     DEFAULT_WAREHOUSE = HEALTHCARE_WH;
@@ -48,7 +48,7 @@ DROP USER IF EXISTS ANAND_JHA;
 CREATE USER ANAND_JHA
     LOGIN_NAME        = 'ANAND_JHA'
     DISPLAY_NAME      = 'Anand Jha'
-    EMAIL             = 'analyticswithanand@gmail.com'
+    EMAIL             = 'anytyty@gmail.com'
     PASSWORD          = 'TempPassw0rd!Change'
     MUST_CHANGE_PASSWORD = FALSE
     DEFAULT_ROLE      = READER_ROLE

@@ -54,6 +54,40 @@ ORDER BY asked_at DESC;
 
 
 
+-- =====================================================================
+-- Add token-usage + cost columns to the audit table.
+-- Run once in a Snowsight worksheet (keeps your existing rows).
+-- =====================================================================
+
+ALTER TABLE HEALTHCARE_DB.RAW.AUDIT_RESPONSE
+    ADD COLUMN IF NOT EXISTS input_tokens  NUMBER;        -- tokens the model READ (prompt + context)
+ALTER TABLE HEALTHCARE_DB.RAW.AUDIT_RESPONSE
+    ADD COLUMN IF NOT EXISTS output_tokens NUMBER;        -- tokens the model WROTE (the answer)
+ALTER TABLE HEALTHCARE_DB.RAW.AUDIT_RESPONSE
+    ADD COLUMN IF NOT EXISTS total_tokens  NUMBER;        -- input + output (total taken/used)
+ALTER TABLE HEALTHCARE_DB.RAW.AUDIT_RESPONSE
+    ADD COLUMN IF NOT EXISTS est_cost_usd  NUMBER(18,6);  -- estimated $ spent (from your rate)
+
+
+
+    select *  FROM HEALTHCARE_DB.RAW.AUDIT_RESPONSE
+ORDER BY asked_at DESC;
+
+SELECT asked_at, user_name, question, input_tokens, output_tokens, total_tokens, est_cost_usd
+FROM HEALTHCARE_DB.RAW.AUDIT_RESPONSE ORDER BY asked_at DESC LIMIT 5;
+---truncate table HEALTHCARE_DB.RAW.AUDIT_RESPONSE;
+
+
+-- Check per-question usage:
+-- SELECT asked_at, user_name, question, input_tokens, output_tokens,
+--        total_tokens, est_cost_usd
+-- FROM HEALTHCARE_DB.RAW.AUDIT_RESPONSE
+-- ORDER BY asked_at DESC;
+
+-- Total spend per user:
+-- SELECT user_name, SUM(total_tokens) AS tokens, SUM(est_cost_usd) AS spend
+-- FROM HEALTHCARE_DB.RAW.AUDIT_RESPONSE GROUP BY user_name ORDER BY spend DESC;
+
 
 
 
