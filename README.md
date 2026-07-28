@@ -1,4 +1,6 @@
-# ❄️ Cortex Multi Agent Studio
+# ❄️ Cortex Multi Agent Studio ❄️
+<img width="559" height="485" alt="image" src="https://github.com/user-attachments/assets/02445d79-7fd0-4cee-a6f4-77c5f1ea5bf3" />
+
 
 A local **Streamlit** app that lets a non‑technical user talk to **Snowflake Cortex Agents** — pick a role, pick an agent (e.g. Healthcare or Finance), and ask questions in plain English. The app shows the answer and can optionally show the data table, the agent's thinking steps, and the SQL it wrote. Every question is automatically recorded in a Snowflake **audit table**, including *who asked it*.
 
